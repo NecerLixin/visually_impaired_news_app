@@ -1,0 +1,2 @@
+# visually_impaired_news_app
+视障人士新闻资讯软件
