@@ -8,13 +8,16 @@ import re
 import asyncio
 from pyppeteer import launch
 import nest_asyncio
+import time
+import datetime
+from tqdm import tqdm
 
-class scrapy:
+class Scrapy:
     def __init__(self,url_dict) -> None:
         self.url_dict = url_dict
         nest_asyncio.apply()
     
-    async def fetch_webpage(url):
+    async def fetch_webpage(self,url):
         """
         使用 Pyppeteer 获取网页内容
         """
@@ -66,14 +69,15 @@ class scrapy:
             list: 包含所有新闻界面url和首页图片url的一个列表 \n
                 [[page_url,img_url],...]
         """
-        content = asyncio.get_event_loop().run_until_complete(fetch_webpage(origin_url))
+        content = asyncio.get_event_loop().run_until_complete(self.fetch_webpage(origin_url))
         html = etree.HTML(content,parser=etree.HTMLParser())
         node_list = html.xpath('//*[@id="newslist"]/li')
         url_list = []
         for node in node_list:
             page_url = node.xpath('div[@class="image"]/a/@href')[0]
             image_url = node.xpath('div[1]/a/img/@data-echo')[0]
-            url_list.append({'page_url':page_url,'image_url':image_url})
+            if "photo.cctv.com" not in page_url:
+                url_list.append({'page_url':page_url,'img_url':image_url})
         return url_list
     
     
@@ -104,35 +108,100 @@ class scrapy:
         response.encoding = 'utf-8'
         content = response.text
         html = etree.HTML(content,parser=etree.HTMLParser())
-        title = html.xpath('//*[@id="title_area"]/h1/text()')[0]
-        tag = page_url.split('/')[-1].split('.')[0]
-        time = html.xpath('//*[@id="title_area"]/div[1]/text()[2]')[0]
-        time = ' '.join(time.split()[1:])
-        source = html.xpath('//*[@id="title_area"]/div[1]/a/text()')[0]
-        # 处理news content
-        news_img_nodes = html.xpath('//*[@id="content_area"]/p[contains(@class,"photo") and contains(@style,"text") and img]')
-        news_img_desc_nodes = html.xpath('//*[@id="content_area"]/p[contains(@class,"photo") and contains(@style,"text") and not(*)]')
-        news_content_nodes = html.xpath('//*[@id="content_area"]/p')
+        news_content_nodes = []
+        try:
+            title = html.xpath('//*[@id="title_area"]/h1/text()')[0]
+            tag = page_url.split('/')[-1].split('.')[0]
+            time = html.xpath('//*[@id="title_area"]/div[2]/text()')
+            if len(time) == 0:
+                time = html.xpath('//*[@id="title_area"]/div/span[3]/text()')
+            #//*[@id="title_area"]/div/span[3]
+            else:
+                time = time[0]
+                time = ' '.join(time.split()[-2:])
+            source = html.xpath('//*[@id="title_area"]/div[1]/text()')
+            if len(source) == 0:
+                source = html.xpaht('//*[@id="title_area"]/div/span[2]/text()')
+                # //*[@id="title_area"]/div/span[2]
+            else:
+                source = source[0].split()[0]
+            #//*[@id="title_area"]/div/span[2]
+            # 处理news content//*[@id="text_area"]/p[2]
+            # //*[@id="text_area"]/p[4]/img
+            # //*[@id="content_area"]/p[1]/text()[2]
+            news_img_nodes = html.xpath('//*[@id="content_area" or @id="text_area"]/p[contains(@class,"photo") and contains(@style,"text") and img]')
+            news_img_desc_nodes = html.xpath('//*[@id="content_area" or @id="text_area"]/p[contains(@class,"photo") and contains(@style,"text") and not(*)]')
+            news_content_nodes = html.xpath('//*[@id="content_area" or @id="text_area"]/p')
+        except:
+            return {}
+       
         content = []
         for node in news_content_nodes:
             if node in news_img_nodes: #取出图片链接
                 img_url = 'https:' + node.xpath('img/@src')[0]
                 content.append({'type':'img_url','data':img_url})
             elif node in news_img_desc_nodes:
-                img_desc = node.xpath('text()')[0].strip()
+                img_desc = node.xpath('text()')
+                if img_desc:
+                    img_desc = img_desc[0].strip()
                 content.append({'type':'img_desc','data':img_desc})
+                # //*[@id="content_area"]/p[1]/strong
             else:
-                text = node.xpath('text()')[0].strip()
-                if text == "":
-                    text = node.xpath('strong/text()')[0]
-                    content.append({'type':'text-blod','data':text})
-                else:
+                text_strong = node.xpath('strong/text()')
+                if text_strong:
+                    text_strong = text_strong[0]
+                    content.append({'type':'text-blod','data':text_strong})
+                text = node.xpath('text()')
+                if text:
+                    text = ''.join(text).strip()
                     content.append({'type':'text','data':text})
+                    
         author = html.xpath('//*[@id="page_body"]/div[1]/div[3]/div[1]/span/text()')
+        if len(author)==0:
+            author = ""
         news_info = dict()
-        news_info['title'] = title
+        news_info['title'] = title.strip()
         news_info['tag'] = tag
         news_info['time'] = time
         news_info['content'] = content
         news_info['author'] = author
+        news_info['source'] = source
         return news_info
+    def get_all_kind_page(self,origin_url_dict:dict,date:str)->dict:
+        """获得所有分类的新闻的URL，分类包括：国内、国际、经济、社会、法治、文娱、科技、生活、军事
+
+        Args:
+            origin_url_dict (dict): {"新闻种类":origin_url,...}
+            date (str): year/month/day
+
+        Returns:
+            dict: {"新闻种类1":["url1","url2",...],
+                "新闻种类1":["url1","url2",...],
+                    ....}
+        """
+        res = []
+        for news_kind, origin_url in tqdm(origin_url_dict.items(),desc='新闻种类'):
+            url_list = self.get_url_list(origin_url=origin_url,date=date)
+            for url_dict in tqdm(url_list,desc='新闻爬取'):
+                page_url = url_dict['page_url']
+                img_url = url_dict['img_url']
+                print(f'page url:{page_url}')
+                details = self.page_parse(page_url)
+                # sample = dict()
+                details['page_url'] = page_url
+                details['item_img_url'] = img_url
+                details['category'] = news_kind
+                res.append(details)
+                time.sleep(1)
+        return res
+
+if __name__ == "__main__":
+    origin_url_dict = json.load(open('scrapy/newsURLdict.json'))
+    scrapy = Scrapy(origin_url_dict)
+    date = datetime.date.today()
+    date = date.strftime("%y/%m/%d")
+    res = scrapy.get_all_kind_page(origin_url_dict,date)
+    with open('news_all.json','w') as f:
+        json.dump(res,f,ensure_ascii=False)
+    print(len(res))
+    

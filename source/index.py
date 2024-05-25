@@ -1,39 +1,27 @@
-from flask import Flask,request,jsonify
+from flask import Flask,abort,request,render_template
 
 app = Flask(__name__)
+app.config['JSON_AS_ASCII'] = False
 
 #http://127.0.0.1:5000/index?name=llixin&age=21
-@app.route("/index")
+@app.route("/index",methods=["GET","POST"])
 def index():
-    name = request.args.get("name")
-    age = request.args.get("age")
-    print(name,age)
-    return jsonify({'code':200,'xx':name,'content':"你好，这是测试"})
+    if request.method == 'GET':
+        return render_template('index.html')
+    if request.method == 'POST':
+        name = request.form.get("name")
+        password = request.form.get("password")
+        if name == "zhang" and password == "123":
+            return "login success"
+        else:
+            abort(404)
+            return None
+    return '123'
 
-
-
-#请求体：xx=123&yy=999
-@app.route("/index2",methods=["POST","GET"])
-def index2():
-    xx = request.form.get("xx") # 获取请求体的数据
-    yy = request.form.get("yy")
-    print(xx,yy)
-    return "成功"
-
-
-#请求体：{"xx":111,"yy":222}
-@app.route("/indexjson",methods=["POST","GET"])
-def index3():
-    data = request.json
-    print(data,type(data))
-    return "成功"
-
-
-
-@app.route("/home")
-def home():
-    return "失败"
-
+# 自定义错误处理方法
+@app.errorhandler(404)
+def handle_404_error(err):
+    return '出现了404错误 错误信息是%s'%err
 
 
 if __name__ == '__main__':
