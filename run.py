@@ -24,7 +24,7 @@ if __name__ == '__main__':
     app = create_app()
     try:
         app.run()
-    except KeyboardInterrupt:
+    except Exception:
         # loop.run_until_complete(browser.close())
         print("exit")
     finally:

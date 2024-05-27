@@ -40,10 +40,16 @@ def create_app():
     app.config.from_object(Config)
     db.init_app(app)
     migrate.init_app(app, db)
-    if not os.path.exists(config_settings['database_path']):
+    # if not os.path.exists(config_settings['database_path']):
+    #     with app.app_context():
+    # # 检查表是否存在，如果不存在则创建
+    #         db.create_all()
+    if config_settings['database_tables_exist'] == False:
         with app.app_context():
-    # 检查表是否存在，如果不存在则创建
             db.create_all()
+        config_settings['database_tables_exist'] = True
+        with open('app/config_setting.json') as f:
+            json.dump(config_settings,f)
     from app.models import dbmodel
     from app.api import endpoints
     app.register_blueprint(endpoints.create_blueprint(browser,loop))
