@@ -19,8 +19,23 @@ async def init_browser():
     print("浏览器初始化")
     return await launch(headless=True,autoClose=False)
 
+async def init_browser():
+    print("浏览器初始化")
+    return await launch(headless=True,autoClose=False)
 
-def create_app(browser,loop):
+async def keep_browser_running():
+    global browser
+    browser = await init_browser()
+    while True:
+        await asyncio.sleep(100) 
+    # while True:
+
+loop = asyncio.get_event_loop()
+asyncio.set_event_loop(loop)
+browser = loop.run_until_complete(init_browser())  
+
+
+def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     db.init_app(app)
