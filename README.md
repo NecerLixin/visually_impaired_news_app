@@ -8,7 +8,7 @@
 
 app文件夹中的config_settings
 
-将`database_path`修改成自己的SQLlite数据库的路径
+将`database_path`修改成自己sqlite数据库的路径，直接创建一个`数据库名称.db`的sqlite数据库即可
 
 如果数据库没有根据模型创建表格，设置`database_tables_exist`为false，代码会为数据库自动创建表格
 
