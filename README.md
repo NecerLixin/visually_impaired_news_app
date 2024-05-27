@@ -4,7 +4,7 @@
 
 ## 后端项目部署
 
-### 需要根据本地修改的文件
+## 需要根据本地修改的文件
 
 app文件夹中的config_settings
 
@@ -19,3 +19,10 @@ app文件夹中的config_settings
 3. 激活虚拟环境`conda activate env_name`
 4. 运行`pip install -r requirements.txt`
 5. 运行`flask run`
+
+## 接口
+
+1. /crawl， GET 请求
+   进行爬虫获取新闻数据，存储到数据库中，每天使用一次即可
+2. /api/getnews GET 请求
+   从数据库中查询，返回新闻数据
