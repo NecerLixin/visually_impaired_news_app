@@ -1,0 +1,19 @@
+{
+    "database_path":"/Users/lijinliang/Project/visually_impaired_news_app_backend/news.db",
+
+    "news_url_dict":{
+                        "首页":"https://news.cctv.com",
+                        "国内":"https://news.cctv.com/china",
+                        "国际":"https://news.cctv.com/world",
+                        "经济":"https://jingji.cctv.com/",
+                        "社会":"https://news.cctv.com/society",
+                        "法治":"https://news.cctv.com/law",
+                        "文娱":"https://news.cctv.com/ent",
+                        "科技":"https://news.cctv.com/tech",
+                        "生活":"https://news.cctv.com/life",
+                        "军事":"https://military.cctv.com",
+                        "人物":"https://people.cctv.com"
+                    },
+    "project_path":"/Users/lijinliang/Project/visually_impaired_news_app_backend/"
+    
+}
