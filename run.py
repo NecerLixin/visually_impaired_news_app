@@ -35,7 +35,7 @@ if __name__ == '__main__':
     
     app = create_app(browser,loop)
     try:
-        app.run()
+        app.run(debug=True)
     except KeyboardInterrupt:
         pass
     finally:
