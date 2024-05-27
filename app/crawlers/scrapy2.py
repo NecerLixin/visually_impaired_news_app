@@ -13,40 +13,20 @@ from app.models.dbmodel import News
 import datetime
 from app import loop
 from requests_html import AsyncHTMLSession
+# nest_asyncio.apply()
 
 class Scrapy:
-    def __init__(self,browser,loop) -> None:
-        self.browser = browser
-        self.loop = loop
-        # self.page = await self.browser.newPage()
-    
-    async def fetch_page(self,url):
-        session = AsyncHTMLSession()
-        response = await session.get(url)
-        # 等待页面加载完成
-        await response.html.arender()
-        # 获取页面内容
-        content = response.html.html
-        await session.close()
-        return content
-    
-    
+
     async def fetch_webpage(self,url):
         """
         使用 Pyppeteer 获取网页内容
         """
         browser = await launch(headless=True)
-        self.browser = self.loop.run_until_complete(init_browser())
-        page = await self.browser.newPage()
+        page = await browser.newPage()
         await page.goto(url)
         content = await page.content()
-        await self.browser.close()
+        await browser.close()
         return content
-    
-    def fethch_webpage2(self,url):
-        response = requests.get(url,self.get_random_headers())
-        response.encoding = 'utf-8'
-        return response.text
     
     def get_random_headers(self)->dict:
         """
@@ -75,7 +55,7 @@ class Scrapy:
         }
         return headers
     
-    async def get_url_list(self,origin_url:str,date:str)->list:
+    def get_url_list(self,origin_url:str,date:str)->list:
         """
         根据源页面的url获取源页面所有新闻的url,获取的新闻的url格式为：
         https://news.cctv.com/year/month/day/abcdfjafa.shtml
@@ -89,11 +69,10 @@ class Scrapy:
             list: 包含所有新闻界面url和首页图片url的一个列表 \n
                 [[page_url,img_url],...]
         """
-        # loop = asyncio.new_event_loop()
-        # asyncio.set_event_loop(self.loop)
-        # content = self.loop.run_until_complete(self.fetch_webpage(origin_url))
-        content = await self.fetch_webpage(origin_url)
-        # content = self.fethch_webpage2(origin_url)
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        content = self.loop.run_until_complete(self.fetch_webpage(origin_url))
+        # content = asyncio.run(self.fetch_page(origin_url))
         html = etree.HTML(content,parser=etree.HTMLParser())
         node_list = html.xpath('//*[@id="newslist"]/li')
         url_list = []
@@ -196,7 +175,7 @@ class Scrapy:
             news_info['date'] = date
         return news_info
     
-    async def get_all_kind_page(self,origin_url_dict:dict,date:datetime.datetime=None)->dict:
+    def get_all_kind_page(self,origin_url_dict:dict,date:datetime.datetime=None)->dict:
         """获得所有分类的新闻的URL，分类包括：国内、国际、经济、社会、法治、文娱、科技、生活、军事
 
         Args:
@@ -213,7 +192,7 @@ class Scrapy:
             date = datetime.datetime.today()
         date_str = date.strftime("%y/%m/%d")
         for news_kind, origin_url in tqdm(origin_url_dict.items(),desc='新闻种类'):
-            url_list = await self.get_url_list(origin_url=origin_url,date=date_str)
+            url_list = self.get_url_list(origin_url=origin_url,date=date_str)
             for url_dict in tqdm(url_list,desc='新闻爬取'):
                 page_url = url_dict['page_url']
                 img_url = url_dict['img_url']
@@ -228,7 +207,7 @@ class Scrapy:
         return res
     
 
-async def get_news(browser,loop,date:datetime.datetime=None,store_as_json:any=None)->list:
+def get_news(date:datetime.datetime=None,store_as_json:any=None)->list:
     """通过爬虫获取新闻
 
     Args:
@@ -239,19 +218,18 @@ async def get_news(browser,loop,date:datetime.datetime=None,store_as_json:any=No
         list: _description_
     """
     news_url_dict = json.load(open('app/config_setting.json'))['news_url_dict']
-    scrapy = Scrapy(browser,loop)
+    scrapy = Scrapy()
     if date == None:
         date = datetime.date.today()
-    res = await scrapy.get_all_kind_page(news_url_dict,date)
+    res = scrapy.get_all_kind_page(news_url_dict,date)
     if store_as_json is not None:
         with open(store_as_json,'w') as f:
             json.dump(res,f)
     return res
 
 
-async def news_storage(broswer,loop,date:datetime.datetime=None,store_as_json:any=None,):
-   
-    news_list = await get_news(broswer,loop,date,store_as_json)
+def news_storage(date:datetime.datetime=None,store_as_json:any=None,):
+    news_list = get_news(date,store_as_json)
     # news_list = loop.run_until_complete(get_news(date, store_as_json))
     for sample in tqdm(news_list,desc='数据库存储'):
         if 'content' in sample:
@@ -271,17 +249,9 @@ async def news_storage(broswer,loop,date:datetime.datetime=None,store_as_json:an
             else:
                 db.session.add(news)
     db.session.commit()
+    print('存储完成')
     
-    
-
 
 if __name__ == "__main__":
-    origin_url_dict = json.load(open('samples/newsURLdict.json'))
-    scrapy = Scrapy()
-    date = datetime.date.today()
-    date_str = date.strftime("%y/%m/%d")
-    res = scrapy.get_all_kind_page(origin_url_dict,date)
-    with open(f'news_all_{date_str}.json','w') as f:
-        json.dump(res,f,ensure_ascii=False)
-    print(len(res))
+    news_storage()
     

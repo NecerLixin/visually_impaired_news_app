@@ -19,7 +19,7 @@ class News(db.Model):
     tag = db.Column(db.String(32))
     news_title = db.Column(db.String(32))
     news_author = db.Column(db.String(32))
-    news_date = db.Column(db.DateTime)
+    news_date = db.Column(db.String(32))
 
 class User(db.Model):
     # 用户表

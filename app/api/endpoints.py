@@ -1,14 +1,13 @@
 from flask import Blueprint, jsonify
-from app.crawlers.scrapy import get_news, news_storage
+from app.crawlers.scrapy3 import news_storage
 
-def create_blueprint(browser,loop):
+def create_blueprint(browser=None,loop=None):
     bp = Blueprint('api', __name__)
-
+        
     @bp.route('/crawl', methods=['GET'])
-    async def crawl():
-        await news_storage(browser,loop, store_as_json='news_526.json')
-        print('完成新闻爬取并添加到数据库')
-        return jsonify({'message': 'Articles fetched and saved successfully'})
+    def crawl():
+        news_storage(browser,loop,store_as_json='news527.json')
+        return "yes"
 
     return bp
 
