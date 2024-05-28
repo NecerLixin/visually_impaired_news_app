@@ -39,7 +39,7 @@ class History(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey(User.user_id))
     news_id = db.Column(db.Integer, db.ForeignKey(News.news_id))
     history_time = db.Column(db.DateTime)
-
+    
 
 class Collection(db.Model):
     # 收藏表
