@@ -2,10 +2,6 @@
     "database_path": "/Users/lijinliang/Project/visually_impaired_news_app_backend/news.db",
     "news_url_dict": {
         "首页":"https://news.cctv.com",
-        "国内":"https://news.cctv.com/china"
-    },
-    "news_url_dict2": {
-        "首页":"https://news.cctv.com",
         "国内":"https://news.cctv.com/china",
         "国际":"https://news.cctv.com/world",
         "经济":"https://jingji.cctv.com/",
