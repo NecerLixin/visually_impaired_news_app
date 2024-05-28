@@ -22,12 +22,13 @@ if __name__ == '__main__':
     # loop.create_task(keep_browser_running())
     
     app = create_app()
-    try:
-        app.run()
-    except Exception:
-        # loop.run_until_complete(browser.close())
-        print("exit")
-    finally:
-        loop.run_until_complete(browser.close())
-        loop.stop()
+    app.run(debug=True)
+    # try:
+    #     app.run()
+    # except Exception:
+    #     # loop.run_until_complete(browser.close())
+    #     print("exit")
+    # finally:
+    #     loop.run_until_complete(browser.close())
+    #     loop.stop()
     

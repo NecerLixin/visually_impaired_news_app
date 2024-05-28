@@ -25,7 +25,7 @@ class User(db.Model):
     # 用户表
     __tablename__ = 'users'
     user_id = db.Column(db.Integer, primary_key=True)
-    user_count = db.Column(db.String(32), unique=True)
+    user_account = db.Column(db.String(32), unique=True)
     user_password = db.Column(db.String(32))
     create_time = db.Column(db.DateTime)
 

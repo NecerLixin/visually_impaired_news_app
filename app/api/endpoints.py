@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify,make_response
+from flask import Blueprint, jsonify, make_response, request
 from app.crawlers.scrapy3 import news_storage
 from app.models.dbmodel import *
 import datetime
@@ -34,7 +34,40 @@ def create_blueprint(browser=None,loop=None):
         response = make_response(data)
         response.headers['Content-Type'] = 'application/json; charset=UTF-8'
         return response
+    
+    
+    @bp.route('/api/register',methods=['POST'])
+    def register():
+        account = request.form.get('account')
+        password = request.form.get('password')
+        vertify = request.form.get('vertify')
+        date = datetime.date.today()
+    
+        if account and password and vertify is not None:
+            # 检查是否存在用户
+            user_check = User.query.filter_by(user_account=account).count()
+            if user_check > 0:
+                print("用户已存在")
+                resp = make_response(jsonify(msg="账号已存在"))
+                resp.status_code = 403
+                return resp
+            else:
+                user = User(user_account=account,
+                            user_password=password,
+                            create_time=date
+                            )
+                db.session.add(user)
+                db.session.commit()
+                print("注册成功")
+                resp = make_response(jsonify(msg="注册成功"))
+                resp.status_code = 200
+                return resp
+        else:
+            resp = make_response(jsonify(msg="格式错误"))
+            resp.status_code = 400
+            return resp
         
+    
     return bp
 
 

@@ -53,5 +53,4 @@ def create_app():
     from app.models import dbmodel
     from app.api import endpoints
     app.register_blueprint(endpoints.create_blueprint(browser,loop))
-
     return app
