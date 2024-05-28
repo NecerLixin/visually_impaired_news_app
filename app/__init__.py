@@ -47,10 +47,15 @@ def create_app():
     if config_settings['database_tables_exist'] == False:
         with app.app_context():
             db.create_all()
-        config_settings['database_tables_exist'] = True
-        with open('app/config_setting.json') as f:
-            json.dump(config_settings,f)
+        # config_settings['database_tables_exist'] = True
+        # with open('app/config_setting.json','w') as f:
+        #     json.dump(config_settings,f)
+            
     from app.models import dbmodel
     from app.api import endpoints
-    app.register_blueprint(endpoints.create_blueprint(browser,loop))
+    
+    app.register_blueprint(endpoints.create_blueprint_crawl(browser,loop))
+    app.register_blueprint(endpoints.create_blueprint_news())
+    app.register_blueprint(endpoints.create_blueprint_users())
+    
     return app

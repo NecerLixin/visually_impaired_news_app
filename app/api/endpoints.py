@@ -2,15 +2,29 @@ from flask import Blueprint, jsonify, make_response, request
 from app.crawlers.scrapy3 import news_storage
 from app.models.dbmodel import *
 import datetime
-def create_blueprint(browser=None,loop=None):
-    bp = Blueprint('api', __name__)
+def create_blueprint_crawl(browser=None,loop=None):
+    bp = Blueprint('crawl', __name__)
         
     @bp.route('/crawl', methods=['GET'])
     def crawl():
-        news_storage(browser,loop,store_as_json='news527.json')
-        return "yes"
-    
-    @bp.route('/api/getnews',methods=['GET'])
+        day_del = int(request.args.get("daydel"))
+        resp = make_response()
+        if day_del is not None:
+            date = datetime.date.today() - datetime.timedelta(days=day_del)
+            news_storage(browser,loop,date=date,store_as_json='news527.json')
+            resp.set_data(jsonify(msg='爬虫完成'))
+            resp.status_code = 200
+        else:
+            resp.set_data(jsonify(msg='请求格式错误'))
+            resp.status_code = 400
+        return resp
+    return bp
+        
+
+
+def create_blueprint_news():
+    bp = Blueprint('news',__name__)
+    @bp.route('/news/getnews',methods=['GET'])
     def getnews():
         date = datetime.date.today()
         date_str = date.strftime("%y%m%d")
@@ -35,8 +49,14 @@ def create_blueprint(browser=None,loop=None):
         response.headers['Content-Type'] = 'application/json; charset=UTF-8'
         return response
     
-    
-    @bp.route('/api/register',methods=['POST'])
+    # @bp.route('/news/newscontent',methods=['GET'])
+    # def getnews_content():
+        
+    return bp
+
+def create_blueprint_users():
+    bp = Blueprint('users',__name__)
+    @bp.route('/users/register',methods=['POST'])
     def register():
         account = request.form.get('account')
         password = request.form.get('password')
@@ -70,7 +90,7 @@ def create_blueprint(browser=None,loop=None):
             # 400 表示请求语法错误，服务器无法理解
             return resp
     
-    @bp.route('api/login',methods=['POST'])
+    @bp.route('/users/login',methods=['POST'])
     def login():
         """
         登陆api，POST请求传输内容： \n
