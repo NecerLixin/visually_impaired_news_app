@@ -5,7 +5,7 @@ import os
 import json
 from tqdm import tqdm
 from app import db
-from sqlalchemy.dialects.sqlite import JSON
+from sqlalchemy.dialects.sqlite import TEXT
 
 # 创建数据库模型类
 class News(db.Model):
@@ -21,7 +21,7 @@ class News(db.Model):
     news_title = db.Column(db.String(32))
     news_author = db.Column(db.String(32))
     news_date = db.Column(db.String(32))
-    news_content = db.Column(db.Text)
+    news_content = db.Column(TEXT)
 
 class User(db.Model):
     # 用户表
