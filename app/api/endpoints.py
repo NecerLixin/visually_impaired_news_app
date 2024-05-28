@@ -20,6 +20,13 @@ def get_brief(content:list,length=60)->str:
     Returns:
         str: 新闻简介
     """
+    text_list = [sample['data'] for sample in content if sample['type']=="text"]
+    text = "".join(text_list)
+    if len(text) > length:
+        return text[:length]
+    else:
+        return text
+    
     
 
 
@@ -193,7 +200,36 @@ def create_blueprint_users():
         resp.headers['Content-Type'] = "application/json; charset=UTF-8"
         return resp
         
-    
+    @bp.route('/users/gethistory',methods=['GET'])
+    def get_history():
+        user_id = request.args.get('userid')
+        history_list = History.query.filter_by(user_id=user_id).order_by(History.history_time.desc()).all()
+        resp = make_response()
+        if history_list:
+            history_news_id = [item.news_id for item in history_list]
+            case_statement = db.case(
+                [(News.news_id == news_id, index) for index, news_id in enumerate(history_news_id)],
+                else_=len(history_news_id)
+            )
+            news_list = News.query.filter(News.news_id.in_(history_news_id)).order_by(case_statement).all()
+            history_data  = []
+            for i in range(len(history_list)):
+                brief = get_brief(news_list[i].content)
+                sample = {
+                          "history_time":history_list[i].history_time,
+                          "title":news_list[i].news_title,
+                          "img_url":news_list[i].new_img_url,
+                          "news_brief":brief,
+                          "news_id":news_list[i].news_id
+                          }
+                history_data.append(sample)
+            resp.set_data(str(history_data))
+            resp.status_code = StatusCode.CODE_FINISTH
+        else:
+            resp.set_data(str("无历史记录"))
+            resp.status_code = StatusCode.CODE_UNDERSTAND_REFUSE
+        resp.headers['Content-Type'] = "application/json; charset=UTF-8"
+        return resp
     
     return bp
 
