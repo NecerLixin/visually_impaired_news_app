@@ -21,7 +21,7 @@ class News(db.Model):
     news_title = db.Column(db.String(32))
     news_author = db.Column(db.String(32))
     news_date = db.Column(db.String(32))
-    news_content = db.Column(db.Text)
+    news_content = db.Column()
 
 class User(db.Model):
     # 用户表
