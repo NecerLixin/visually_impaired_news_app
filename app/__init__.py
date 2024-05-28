@@ -44,9 +44,9 @@ def create_app():
     #     with app.app_context():
     # # 检查表是否存在，如果不存在则创建
     #         db.create_all()
-    if config_settings['database_tables_exist'] == False:
-        with app.app_context():
-            db.create_all()
+    # if config_settings['database_tables_exist'] == False:
+    with app.app_context():
+        db.create_all()
         # config_settings['database_tables_exist'] = True
         # with open('app/config_setting.json','w') as f:
         #     json.dump(config_settings,f)
