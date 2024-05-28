@@ -244,7 +244,7 @@ def news_storage(browser,loop,date:datetime.datetime=None,store_as_json:any=None
                 news_title = sample['title'],
                 news_author = sample['author'],
                 news_date = sample['date'],
-                news_content = json.dumps(sample['content'])
+                news_content = json.dumps(sample['content'],ensure_ascii=False)
             )
             news_tag_check = News.query.filter_by(tag=sample['tag']).count()
             if news_tag_check > 0:
