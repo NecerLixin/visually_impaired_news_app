@@ -40,16 +40,17 @@ def create_blueprint(browser=None,loop=None):
     def register():
         account = request.form.get('account')
         password = request.form.get('password')
-        vertify = request.form.get('vertify')
+        verify = request.form.get('vertify')
         date = datetime.date.today()
-    
-        if account and password and vertify is not None:
+        resp = make_response()
+        if account and password and verify is not None:
             # 检查是否存在用户
             user_check = User.query.filter_by(user_account=account).count()
             if user_check > 0:
                 print("用户已存在")
-                resp = make_response(jsonify(msg="账号已存在"))
+                resp.set_data(jsonify(msg="账号已存在"))
                 resp.status_code = 403
+                # 服务器理解客户端请求，但是拒绝执行此次请求
                 return resp
             else:
                 user = User(user_account=account,
@@ -59,13 +60,51 @@ def create_blueprint(browser=None,loop=None):
                 db.session.add(user)
                 db.session.commit()
                 print("注册成功")
-                resp = make_response(jsonify(msg="注册成功"))
+                resp.set_data(jsonify(msg="注册成功"))
                 resp.status_code = 200
+                # 请求成功
                 return resp
         else:
-            resp = make_response(jsonify(msg="格式错误"))
+            resp.set_data(jsonify(msg="格式错误"))
             resp.status_code = 400
+            # 400 表示请求语法错误，服务器无法理解
             return resp
+    
+    @bp.route('api/login',methods=['POST'])
+    def login():
+        """
+        登陆api，POST请求传输内容： \n
+        {
+            "account": 用户账号,
+            "password":用户密码
+        }
+
+        Returns:
+            _type_: _description_
+        """
+        account = request.form.get('account')
+        password = request.form.get('password')
+        resp = make_response()
+        
+        if account and password is not None:
+            user = User.query.filter_by(user_account=account).first()
+            if user:
+                user_password = user.user_password
+                if password == user_password:
+                    resp.set_data(jsonify(msg='登陆成功'))
+                    resp.status_code = 200
+                    return resp
+                else:
+                    resp.set_data(jsonify(mgs="账号错误"))
+                    resp.status_code = 403
+                    # 理解客户段请求，但是拒绝
+                    return resp
+
+            else :
+                resp = make_response(jsonify(msg="用户不存在"))
+                resp.status_code = 406
+                # 服务器无法根据客户端请求的内容特性完成请求
+                return resp
         
     
     return bp
