@@ -14,7 +14,7 @@ class News(db.Model):
     news_id = db.Column(db.Integer, primary_key=True)  # 设置主键，能够自动增长
     news_category = db.Column(db.String(32))
     news_time = db.Column(db.String(32))
-    new_img_url = db.Column(db.String(64))
+    news_img_url = db.Column(db.String(64))
     page_url = db.Column(db.String(64))
     source = db.Column(db.String(64))
     tag = db.Column(db.String(32))
