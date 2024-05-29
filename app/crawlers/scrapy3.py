@@ -153,7 +153,7 @@ def page_parse(page_url:str,date:datetime.datetime=None)->dict:
             text_strong = node.xpath('strong/text()')
             if text_strong:
                 text_strong = text_strong[0]
-                content.append({'type':'text-blod','data':text_strong})
+                content.append({'type':'text-bold','data':text_strong})
             text = node.xpath('text()')
             if text:
                 text = ''.join(text).strip()
