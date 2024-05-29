@@ -63,18 +63,18 @@ def create_blueprint_news():
             news_dict = {
                 'news_id': news.news_id,
                 'news_category': news.news_category,
-                'news_time': news.news_time,
+                # 'news_time': news.news_time,
                 'new_img_url': news.new_img_url,
-                'page_url': news.page_url,
-                'source': news.source,
+                # 'page_url': news.page_url,
+                # 'source': news.source,
                 'tag': news.tag,
                 'news_title': news.news_title,
-                'news_author': news.news_author,
+                # 'news_author': news.news_author,
                 'news_date': news.news_date,
             }
             news_data.append(news_dict)
-        data = str(news_data)
-        response = make_response(data)
+        # data = str(news_data)
+        response = make_response(jsonify(news_data))
         response.headers['Content-Type'] = 'application/json; charset=UTF-8'
         return response
     
@@ -95,8 +95,22 @@ def create_blueprint_news():
         resp.headers['Content-Type'] = 'application/json; charset=UTF-8'
         return resp
     
-    
+    @bp.route("/news/getnewsone",methods=['GET'])
+    def get_news_one():
+        news_id = request.args.get('id')
+        news = News.query.filter_by(news_id=news_id).first()
+        news_data = {
+            "news_title":news.news_title,
+            "source":news.source,
+            "content":json.loads(news.news_content,ensure_ascii=False),
+            "author":news.news_author,
+            "category":news.news_category
+        }
+        resp = make_response(jsonify(news_data))
+        resp.status_code = 200
+        resp.headers['Content-Type'] = 'application/json; charset=UTF-8'
         
+        return resp
     
     
     return bp
