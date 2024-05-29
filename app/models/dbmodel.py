@@ -5,6 +5,7 @@ import os
 import json
 from tqdm import tqdm
 from app import db
+from sqlalchemy.dialects.sqlite import TEXT
 
 # 创建数据库模型类
 class News(db.Model):
@@ -13,19 +14,20 @@ class News(db.Model):
     news_id = db.Column(db.Integer, primary_key=True)  # 设置主键，能够自动增长
     news_category = db.Column(db.String(32))
     news_time = db.Column(db.String(32))
-    new_img_url = db.Column(db.String(64))
+    news_img_url = db.Column(db.String(64))
     page_url = db.Column(db.String(64))
     source = db.Column(db.String(64))
     tag = db.Column(db.String(32))
     news_title = db.Column(db.String(32))
     news_author = db.Column(db.String(32))
     news_date = db.Column(db.String(32))
+    news_content = db.Column(TEXT)
 
 class User(db.Model):
     # 用户表
     __tablename__ = 'users'
     user_id = db.Column(db.Integer, primary_key=True)
-    user_count = db.Column(db.String(32), unique=True)
+    user_account = db.Column(db.String(32), unique=True)
     user_password = db.Column(db.String(32))
     create_time = db.Column(db.DateTime)
 
@@ -37,7 +39,7 @@ class History(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey(User.user_id))
     news_id = db.Column(db.Integer, db.ForeignKey(News.news_id))
     history_time = db.Column(db.DateTime)
-
+    
 
 class Collection(db.Model):
     # 收藏表

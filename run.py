@@ -16,18 +16,19 @@ app = create_app()
 # app.run(debug=True)
 
 if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    asyncio.set_event_loop(loop)
+    # loop = asyncio.get_event_loop()
+    # asyncio.set_event_loop(loop)
     # browser = loop.run_until_complete(init_browser())  
     # loop.create_task(keep_browser_running())
     
     app = create_app()
-    try:
-        app.run()
-    except KeyboardInterrupt:
-        # loop.run_until_complete(browser.close())
-        print("exit")
-    finally:
-        loop.run_until_complete(browser.close())
-        loop.stop()
+    app.run(debug=True)
+    # try:
+    #     app.run()
+    # except Exception:
+    #     # loop.run_until_complete(browser.close())
+    #     print("exit")
+    # finally:
+    #     loop.run_until_complete(browser.close())
+    #     loop.stop()
     

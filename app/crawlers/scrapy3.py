@@ -153,7 +153,7 @@ def page_parse(page_url:str,date:datetime.datetime=None)->dict:
             text_strong = node.xpath('strong/text()')
             if text_strong:
                 text_strong = text_strong[0]
-                content.append({'type':'text-blod','data':text_strong})
+                content.append({'type':'text-bold','data':text_strong})
             text = node.xpath('text()')
             if text:
                 text = ''.join(text).strip()
@@ -243,7 +243,8 @@ def news_storage(browser,loop,date:datetime.datetime=None,store_as_json:any=None
                 tag = sample['tag'],
                 news_title = sample['title'],
                 news_author = sample['author'],
-                news_date = sample['date']
+                news_date = sample['date'],
+                news_content = json.dumps(sample['content'],ensure_ascii=False)
             )
             news_tag_check = News.query.filter_by(tag=sample['tag']).count()
             if news_tag_check > 0:
