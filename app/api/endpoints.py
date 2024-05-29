@@ -60,6 +60,7 @@ def create_blueprint_news():
         news_list = News.query.filter_by(news_date=date_str).all()
         news_data = []
         for news in news_list:
+            brief = get_brief(json.loads(news.news_content))
             news_dict = {
                 'news_id': news.news_id,
                 'news_category': news.news_category,
@@ -71,6 +72,7 @@ def create_blueprint_news():
                 'news_title': news.news_title,
                 # 'news_author': news.news_author,
                 'news_date': news.news_date,
+                'brief':brief
             }
             news_data.append(news_dict)
         # data = str(news_data)
