@@ -1,0 +1,14 @@
+<div id="data_show"></div>
+
+<script>
+$(document).ready(function () {
+    namespace = '/echo';
+    var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
+    socket.on('echo', function (res) {
+        var data_show = res.data;
+        if (data_show) {
+            $("#data_show").append(data_show).append('<br/>');
+        }
+    });
+});
+</script>

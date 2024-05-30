@@ -2,127 +2,16 @@ from flask import Blueprint, jsonify, make_response, request
 from app.crawlers.scrapy3 import news_storage
 from app.models.dbmodel import *
 import datetime
+from .utils import StatusCode,get_brief
 
-class StatusCode:
-    CODE_FINISTH = 200
-    CODE_SYTAX_ERROR = 400
-    CODE_UNDERSTAND_REFUSE = 403
-    CODE_CANT_FINISHT = 406
-
-
-def get_brief(content:list,length=60)->str:
-    """
-    根据content构建一个新闻简
-
-    Args:
-        content (list): 新闻content列表
-
-    Returns:
-        str: 新闻简介
-    """
-    text_list = [sample['data'] for sample in content if sample['type']=="text"]
-    text = "".join(text_list)
-    if len(text) > length:
-        return text[:length] + "……"
-    else:
-        return text + "……"
-    
-    
-    
-
-
-def create_blueprint_crawl(browser=None,loop=None):
-    bp = Blueprint('crawl', __name__)
-        
-    @bp.route('/crawl', methods=['GET'])
-    def crawl():
-        day_del = int(request.args.get("daydel"))
-        resp = make_response()
-        resp.headers['Content-Type'] = 'application/json; charset=UTF-8'
-        if day_del is not None:
-            date = datetime.date.today() - datetime.timedelta(days=day_del)
-            news_storage(browser,loop,date=date)
-            resp.set_data(jsonify(msg='爬虫完成').get_data())
-            resp.status_code = StatusCode.CODE_FINISTH
-        else:
-            resp.set_data(jsonify(msg='请求格式错误').get_data())
-            resp.status_code = StatusCode.CODE_SYTAX_ERROR
-        return resp
-    return bp
-        
-
-def create_blueprint_news():
-    bp = Blueprint('news',__name__)
-    @bp.route('/news/getnews',methods=['GET'])
-    def getnews():
-        date = datetime.date.today()
-        date_str = date.strftime("%y%m%d")
-        news_list = News.query.filter_by(news_date=date_str).all()
-        news_data = []
-        for news in news_list:
-            brief = get_brief(json.loads(news.news_content))
-            news_dict = {
-                'news_id': news.news_id,
-                'news_category': news.news_category,
-                # 'news_time': news.news_time,
-                'new_img_url': news.new_img_url,
-                # 'page_url': news.page_url,
-                # 'source': news.source,
-                'tag': news.tag,
-                'news_title': news.news_title,
-                # 'news_author': news.news_author,
-                'news_date': news.news_date,
-                'brief':brief
-            }
-            news_data.append(news_dict)
-        # data = str(news_data)
-        response = make_response(jsonify(news_data))
-        response.headers['Content-Type'] = 'application/json; charset=UTF-8'
-        return response
-    
-    @bp.route('/news/newscontent',methods=['GET'])
-    def getnews_content():
-        news_id = request.args.get('newsid')
-        news = News.query.filter_by(news_id=news_id).first()
-        resp = make_response()
-        if news:
-            msg = "新闻内容请求成功"
-            content = news.news_content
-            resp.set_data(str({"msg":msg,"content":content}))
-            resp.status_code = StatusCode.CODE_FINISTH
-        else:
-            msg = "请求失败，新闻id错误"
-            resp.set_data(str({"msg":msg}))
-            resp.status_code = StatusCode.CODE_CANT_FINISHT
-        resp.headers['Content-Type'] = 'application/json; charset=UTF-8'
-        return resp
-    
-    @bp.route("/news/getnewsone",methods=['GET'])
-    def get_news_one():
-        news_id = request.args.get('id')
-        news = News.query.filter_by(news_id=news_id).first()
-        news_data = {
-            "news_title":news.news_title,
-            "source":news.source,
-            "content":json.loads(news.news_content,ensure_ascii=False),
-            "author":news.news_author,
-            "category":news.news_category
-        }
-        resp = make_response(jsonify(news_data))
-        resp.status_code = 200
-        resp.headers['Content-Type'] = 'application/json; charset=UTF-8'
-        
-        return resp
-    
-    
-    return bp
 
 def create_blueprint_users():
     bp = Blueprint('users',__name__)
     @bp.route('/users/register',methods=['POST'])
     def register():
-        account = request.form.get('account')
-        password = request.form.get('password')
+        data = request.get_json()
+        account = data.get('account')
+        password = data.get('password')
         verify = request.form.get('vertify')
         date = datetime.date.today()
         resp = make_response()
@@ -166,8 +55,10 @@ def create_blueprint_users():
         Returns:
             _type_: _description_
         """
-        account = request.form.get('account')
-        password = request.form.get('password')
+        
+        data = request.get_json()
+        account = data.get('account')
+        password = data.get('password')
         resp = make_response()
         
         
@@ -187,14 +78,17 @@ def create_blueprint_users():
                 resp = make_response(jsonify(msg="用户不存在").get_data())
                 resp.status_code = StatusCode.CODE_CANT_FINISHT
                 # 服务器无法根据客户端请求的内容特性完成请求
-            resp.headers['Content-Type'] = 'application/json; charset=UTF-8'
-            return resp
+            resp.headers['Content-Type'] = 'application/json; charset=gzip'
+        else:
+            resp.set_data(jsonify(msg="未知错误").get_data())
+        return resp
             
     
     @bp.route("/users/addhistory",methods=["POST"])
     def add_history():
-        user_account = request.form.get('account')
-        news_id = request.form.get('news_id')
+        data = request.get_json()
+        user_account = data.get('account')
+        news_id = data.get('news_id')
         resp = make_response()
         if user_account and news_id is not None:
             user = User.query.filter_by(user_account=user_account).first()
@@ -247,9 +141,7 @@ def create_blueprint_users():
         else:
             resp.set_data(jsonify(msg="无历史记录").get_data())
             resp.status_code = StatusCode.CODE_UNDERSTAND_REFUSE
-        resp.headers['Content-Type'] = "application/json; charset=UTF-8"
+        resp.headers['Content-Type'] = "application/json; charset=utf-8"
         return resp
     
     return bp
-
-
