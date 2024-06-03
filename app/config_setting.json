@@ -14,5 +14,10 @@
         "人物":"https://people.cctv.com"
     },
     "project_path": "/Users/lijinliang/Project/visually_impaired_news_app_backend/",
-    "database_tables_exist": false
+    "database_tables_exist": false,
+    "ifly_key": {
+        "APPID":"6f7999f7",
+        "APISecret":"NzA3MmUzYTY2OTIwODIzZWQ2NjQxMWNi",
+        "APIKey":"5830af717c0b5d1d8f6a9168582b7fab"
+    }
 }
