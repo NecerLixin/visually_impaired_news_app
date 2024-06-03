@@ -173,7 +173,7 @@ def do_create(text):
 def do_query(task_id):
     test_task = TestTask()
     # 这里循环调用查询结果，当task_status状态为'5'（即大文本合成任务完成）时停止循环，循环次数和sleep时间可酌情定义
-    for i in range(9):
+    for i in range(1000):
         # 等待1秒
         time.sleep(1)
         # 调用查询任务接口

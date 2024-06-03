@@ -5,18 +5,20 @@ class StatusCode:
     CODE_CANT_FINISHT = 406
 
 
-def get_content(content:list)->str:
+def get_content(content:list,title:str)->str:
     """
     根据content返回一个内容字符串
 
     Args:
-        content (list): 内容列表
+        content (list): 内容列表,
+        title (str): 新闻标题
 
     Returns:
         str: 新闻文本字符串
     """
     text_list = [sample['data'] for sample in content if sample['type']=="text"]
     text = "".join(text_list)
+    text = title + text
     return text
 
 

@@ -19,9 +19,11 @@ def create_blueprint_ttsf():
     @bp.route('/tts',methods=['GET'])
     def tts():
         news_id = request.args.get('id')
+        print(f'tts,id={news_id}')
         news = News.query.filter_by(news_id=news_id).first()
         content = json.loads(news.news_content)
-        content_text = get_content(content)
+        title = news.news_title
+        content_text = get_content(content,title)
         file_name = f'{news_id}.mp3'
         file_path = os.path.join(AUDIO_FOLDER, file_name)
         file_path = os.path.join(project_path,file_path)
@@ -33,6 +35,9 @@ def create_blueprint_ttsf():
             query_result = do_query(task_id)
             # 4、下载到本地
             Download_addres = query_result
+            if Download_addres == None:
+                print("下载地址为空")
+                return jsonify(msg="失败"), StatusCode.CODE_CANT_FINISHT
             f = requests.get(Download_addres)
             # 下载文件，根据需要更改文件后缀
             
