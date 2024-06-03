@@ -11,7 +11,7 @@ def create_blueprint_news():
         date = datetime.date.today()
         date_str = date.strftime("%y%m%d")
         # news_list = News.query.filter_by(news_date=date_str).all()
-        news_list = News.query.all()[:10]
+        news_list = News.query.order_by(News.news_date.desc()).all()[:10]
         news_data = []
         for news in news_list:
             brief = get_brief(json.loads(news.news_content))
