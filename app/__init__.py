@@ -46,7 +46,7 @@ def create_app():
         db.create_all()
             
     from app.models import dbmodel
-    from app.api import api_scrapy,api_users,api_news,api_serach
+    from app.api import api_scrapy,api_users,api_news,api_serach,api_tts
     from app.routes import init_routes
     from app.websocket import audio
     
@@ -55,6 +55,7 @@ def create_app():
     app.register_blueprint(api_users.create_blueprint_users())
     app.register_blueprint(audio.websocket_bp)
     app.register_blueprint(api_serach.create_blueprint_search())
+    app.register_blueprint(api_tts.create_blueprint_ttsf())
     socketio.init_app(app,cros_allow_origin='*')
     init_routes(app)
     

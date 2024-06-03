@@ -3,7 +3,24 @@ class StatusCode:
     CODE_SYTAX_ERROR = 400
     CODE_UNDERSTAND_REFUSE = 403
     CODE_CANT_FINISHT = 406
-    
+
+
+def get_content(content:list)->str:
+    """
+    根据content返回一个内容字符串
+
+    Args:
+        content (list): 内容列表
+
+    Returns:
+        str: 新闻文本字符串
+    """
+    text_list = [sample['data'] for sample in content if sample['type']=="text"]
+    text = "".join(text_list)
+    return text
+
+
+
 def get_brief(content:list,length=60)->str:
     """
     根据content构建一个新闻简
@@ -20,3 +37,4 @@ def get_brief(content:list,length=60)->str:
         return text[:length] + "……"
     else:
         return text + "……"
+

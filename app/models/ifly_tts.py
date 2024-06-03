@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # @Author : iflytek
-
 import requests
 import json
 import base64
@@ -13,6 +12,16 @@ from datetime import datetime
 from wsgiref.handlers import format_date_time
 from time import mktime
 import sys
+import json
+
+config_setting = json.load(open('app/config_setting.json'))
+project_path = config_setting['project_path']
+HOST = "api-dx.xf-yun.com"
+APP_ID = config_setting['ifly_key']['APPID']
+API_KEY = config_setting['ifly_key']['APIKey']
+API_SECRET = config_setting['ifly_key']['APISecret']
+AUDIO_FOLDER = 'source'
+
 
 class TestTask():
 
