@@ -10,7 +10,8 @@ def create_blueprint_news():
     def getnews():
         date = datetime.date.today()
         date_str = date.strftime("%y%m%d")
-        news_list = News.query.filter_by(news_date=date_str).all()
+        # news_list = News.query.filter_by(news_date=date_str).all()
+        news_list = News.query.all()[:10]
         news_data = []
         for news in news_list:
             brief = get_brief(json.loads(news.news_content))
@@ -56,12 +57,12 @@ def create_blueprint_news():
         news_id = request.args.get('id')
         news = News.query.filter_by(news_id=news_id).first()
         news_data = {
-            "news_title":news.news_title,
+            "title":news.news_title,
             "source":news.source,
-            "content":json.loads(news.news_content,ensure_ascii=False),
+            "content":json.loads(news.news_content),
             "author":news.news_author,
             "category":news.news_category,
-            "date":news.news_date
+            "time":news.news_time
         }
         resp = make_response(jsonify(news_data))
         resp.status_code = 200

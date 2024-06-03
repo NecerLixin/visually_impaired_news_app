@@ -12,11 +12,11 @@ def create_blueprint_users():
         data = request.get_json()
         account = data.get('account')
         password = data.get('password')
-        verify = request.form.get('vertify')
+        # verify = request.form.get('vertify')
         date = datetime.date.today()
         resp = make_response()
         resp.headers['Content-Type'] = 'application/json; charset=UTF-8'
-        if account and password and verify is not None:
+        if account and password is not None:
             # 检查是否存在用户
             user_check = User.query.filter_by(user_account=account).count()
             if user_check > 0:
@@ -113,7 +113,8 @@ def create_blueprint_users():
         
     @bp.route('/users/gethistory',methods=['GET'])
     def get_history():
-        user_id = request.args.get('userid')
+        user_account = request.args.get('account')
+        user_id = User.query.filter_by(user_account=user_account).first().user_id
         history_list = History.query.filter_by(user_id=user_id).order_by(History.history_time.desc()).all()
         resp = make_response()
         if history_list:
@@ -131,7 +132,7 @@ def create_blueprint_users():
                 sample = {
                           "history_time":history_list[i].history_time,
                           "title":news.news_title,
-                          "img_url":news.new_img_url,
+                          "img_url":news.news_img_url,
                           "news_brief":brief,
                           "news_id":news.news_id
                           }

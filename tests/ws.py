@@ -1,10 +1,13 @@
-from flask import Blueprint
-from flask_socketio import emit,SocketIO,namespace
-# from app import socketio
+from flask import Flask, render_template
+from flask_socketio import SocketIO, send, emit
 
-websocket_bp = Blueprint('audio', __name__)
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'your_secret_key'
+socketio = SocketIO(app)
 
-socketio = SocketIO()
+@app.route('/')
+def index():
+    return "WebSocket Server is running. Connect to it using a WebSocket client."
 
 # @socketio.on('connect', namespace='/audio')
 # def handle_connect():
@@ -27,3 +30,8 @@ def handle_message(msg):
 def handle_audio_data(data):
     # Process and forward audio data
     emit('audio_response', data, broadcast=True)
+    
+if __name__ == "__main__":
+    print(1111)
+    socketio.run(app, host='127.0.0.1', port=5001,debug=True)
+    print(1111)

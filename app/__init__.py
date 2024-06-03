@@ -7,9 +7,11 @@ import asyncio
 from pyppeteer import launch
 import os
 import json
+from app.websocket.audio import socketio
+from app.routes import init_routes
 
 config_settings = json.load(open('app/config_setting.json'))
-socketio = SocketIO()
+
 
 
 db = SQLAlchemy()
@@ -37,7 +39,6 @@ def create_app():
     # app.config['JSON_AS_ASCII'] = False
     # app.config['ensure_ascii'] = False
     app.json.ensure_ascii = False
-    socketio.init_app(app)
     db.init_app(app)
     migrate.init_app(app, db)
     
@@ -45,13 +46,16 @@ def create_app():
         db.create_all()
             
     from app.models import dbmodel
-    from app.api import api_scrapy,api_users,api_news
+    from app.api import api_scrapy,api_users,api_news,api_serach
     from app.routes import init_routes
+    from app.websocket import audio
     
     app.register_blueprint(api_scrapy.create_blueprint_crawl(browser,loop))
     app.register_blueprint(api_news.create_blueprint_news())
     app.register_blueprint(api_users.create_blueprint_users())
-    
-    # init_routes(app)
+    app.register_blueprint(audio.websocket_bp)
+    app.register_blueprint(api_serach.create_blueprint_search())
+    socketio.init_app(app,cros_allow_origin='*')
+    init_routes(app)
     
     return app

@@ -194,16 +194,21 @@ def get_all_kind_page(browser,loop,origin_url_dict:dict,date:datetime.datetime=N
     for news_kind, origin_url in tqdm(origin_url_dict.items(),desc='新闻种类'):
         url_list = get_url_list(browser,loop,origin_url=origin_url,date=date_str)
         for url_dict in tqdm(url_list,desc='新闻爬取'):
+            
             page_url = url_dict['page_url']
             img_url = url_dict['img_url']
             # print(f'page url:{page_url}')
-            details = page_parse(page_url,date)
+            try:
+                details = page_parse(page_url,date)
+                details['page_url'] = page_url
+                details['item_img_url'] = img_url
+                details['category'] = news_kind
+                res.append(details)
+                time.sleep(0.1)
+            except Exception as e:
+                print(e)
             # sample = dict()
-            details['page_url'] = page_url
-            details['item_img_url'] = img_url
-            details['category'] = news_kind
-            res.append(details)
-            time.sleep(0.1)
+           
     return res
     
 
@@ -237,7 +242,7 @@ def news_storage(browser,loop,date:datetime.datetime=None,store_as_json:any=None
             news = News(
                 news_category = sample['category'],
                 news_time = sample['time'],
-                new_img_url = sample['item_img_url'],
+                news_img_url = sample['item_img_url'],
                 page_url = sample['page_url'],
                 source = sample['source'],
                 tag = sample['tag'],
