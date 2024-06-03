@@ -1,177 +1,221 @@
-# -*- coding:utf-8 -*-
-#
-#   author: iflytek
-#
-#  本demo测试时运行的环境为：Windows + Python3.7
-#  本demo测试成功运行时所安装的第三方库及其版本如下：
-#   cffi==1.12.3
-#   gevent==1.4.0
-#   greenlet==0.4.15
-#   pycparser==2.19
-#   six==1.12.0
-#   websocket==0.2.1
-#   websocket-client==0.56.0
-#   合成小语种需要传输小语种文本、使用小语种发音人vcn、tte=unicode以及修改文本编码方式
-#  错误码链接：https://www.xfyun.cn/document/error-code （code返回错误码时必看）
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-import websocket
-import datetime
-import hashlib
-import base64
-import hmac
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# @Author : iflytek
+
+import requests
 import json
-from urllib.parse import urlencode
+import base64
+import hashlib
 import time
-import ssl
-from wsgiref.handlers import format_date_time
+from urllib.parse import urlencode
+import hmac
 from datetime import datetime
+from wsgiref.handlers import format_date_time
 from time import mktime
-import _thread as thread
-import os
+import sys
 
+class TestTask():
 
-STATUS_FIRST_FRAME = 0  # 第一帧的标识
-STATUS_CONTINUE_FRAME = 1  # 中间帧标识
-STATUS_LAST_FRAME = 2  # 最后一帧的标识
+    def __init__(self):
+        self.host = HOST
+        self.app_id = APP_ID
+        self.api_key = API_KEY
+        self.api_secret = API_SECRET
 
-import wave
-import numpy as np
+    # 生成鉴权的url
+    def assemble_auth_url(self, path):
+        params = self.assemble_auth_params(path)
+        # 请求地址
+        request_url = "http://" + self.host + path
+        # 拼接请求地址和鉴权参数，生成带鉴权参数的url
+        auth_url = request_url + "?" + urlencode(params)
+        return auth_url
 
-def pcm_to_wav(pcm_data, wav_file_path='./sample/demo.wav', channels=1, sample_width=2, sample_rate=22050):
-    # 读取PCM数据
-    # with open(pcm_file_path, 'rb') as pcm_file:
-    #     pcm_data = pcm_file.read()
-    
-    # 将PCM数据转换为numpy数组
-    pcm_array = np.frombuffer(pcm_data, dtype=np.int16)
-    
-    # 创建一个WAV文件
-    with wave.open(wav_file_path, 'w') as wav_file:
-        wav_file.setnchannels(channels)           # 设置通道数
-        wav_file.setsampwidth(sample_width)       # 设置样本宽度
-        wav_file.setframerate(sample_rate)        # 设置采样率
-        wav_file.writeframes(pcm_array.tobytes()) # 写入PCM数据
-
-# # 使用函数进行转换
-# pcm_file_path = 'input.pcm'
-# wav_file_path = 'output.wav'
-# pcm_to_wav(pcm_file_path, wav_file_path)
-
-
-
-class Ws_Param(object):
-    # 初始化
-    def __init__(self, APPID, APIKey, APISecret, Text):
-        self.APPID = APPID
-        self.APIKey = APIKey
-        self.APISecret = APISecret
-        self.Text = Text
-
-        # 公共参数(common)
-        self.CommonArgs = {"app_id": self.APPID}
-        # 业务参数(business)，更多个性化参数可在官网查看
-        self.BusinessArgs = {"aue": "raw", "auf": "audio/L16;rate=16000", "vcn": "xiaoyan", "tte": "utf8"}
-        self.Data = {"status": 2, "text": str(base64.b64encode(self.Text.encode('utf-8')), "UTF8")}
-        #使用小语种须使用以下方式，此处的unicode指的是 utf16小端的编码方式，即"UTF-16LE"”
-        #self.Data = {"status": 2, "text": str(base64.b64encode(self.Text.encode('utf-16')), "UTF8")}
-
-    # 生成url
-    def create_url(self):
-        url = 'wss://tts-api.xfyun.cn/v2/tts'
+    # 生成鉴权的参数
+    def assemble_auth_params(self, path):
         # 生成RFC1123格式的时间戳
-        now = datetime.now()
-        date = format_date_time(mktime(now.timetuple()))
-
+        format_date = format_date_time(mktime(datetime.now().timetuple()))
         # 拼接字符串
-        signature_origin = "host: " + "ws-api.xfyun.cn" + "\n"
-        signature_origin += "date: " + date + "\n"
-        signature_origin += "GET " + "/v2/tts " + "HTTP/1.1"
-        # 进行hmac-sha256进行加密
-        signature_sha = hmac.new(self.APISecret.encode('utf-8'), signature_origin.encode('utf-8'),
+        signature_origin = "host: " + self.host + "\n"
+        signature_origin += "date: " + format_date + "\n"
+        signature_origin += "POST " + path + " HTTP/1.1"
+        # 进行hmac-sha256加密
+        signature_sha = hmac.new(self.api_secret.encode('utf-8'), signature_origin.encode('utf-8'),
                                  digestmod=hashlib.sha256).digest()
         signature_sha = base64.b64encode(signature_sha).decode(encoding='utf-8')
-
-        authorization_origin = "api_key=\"%s\", algorithm=\"%s\", headers=\"%s\", signature=\"%s\"" % (
-            self.APIKey, "hmac-sha256", "host date request-line", signature_sha)
+        # 构建请求参数
+        authorization_origin = 'api_key="%s", algorithm="%s", headers="%s", signature="%s"' % (
+            self.api_key, "hmac-sha256", "host date request-line", signature_sha)
+        # 将请求参数使用base64编码
         authorization = base64.b64encode(authorization_origin.encode('utf-8')).decode(encoding='utf-8')
         # 将请求的鉴权参数组合为字典
-        v = {
-            "authorization": authorization,
-            "date": date,
-            "host": "ws-api.xfyun.cn"
+        params = {
+            "host": self.host,
+            "date": format_date,
+            "authorization": authorization
         }
-        # 拼接鉴权参数，生成url
-        url = url + '?' + urlencode(v)
-        # print("date: ",date)
-        # print("v: ",v)
-        # 此处打印出建立连接时候的url,参考本demo的时候可取消上方打印的注释，比对相同参数时生成的url与自己代码生成的url是否一致
-        # print('websocket url :', url)
-        return url
+        return params
 
-def on_message(ws, message):
-    try:
-        message =json.loads(message)
-        code = message["code"]
-        sid = message["sid"]
-        audio = message["data"]["audio"]
-        audio = base64.b64decode(audio)
-        status = message["data"]["status"]
-        print(message)
-        if status == 2:
-            print("ws is closed")
-            ws.close()
-        if code != 0:
-            errMsg = message["message"]
-            print("sid:%s call error:%s code is:%s" % (sid, errMsg, code))
+    # 创建任务
+    def test_create(self, text):
+        # 创建任务的路由
+        create_path = "/v1/private/dts_create"
+        # 拼接鉴权参数后生成的url
+        auth_url = self.assemble_auth_url(create_path)
+        # 合成文本
+        encode_str = base64.encodebytes(text.encode("UTF8"))
+        txt = encode_str.decode()
+        # 请求头
+        headers = {'Content-Type': 'application/json'}
+        # 请求参数，字段具体含义见官网文档：https://aidocs.xfyun.cn/docs/dts/%E6%8E%A5%E5%8F%A3%E5%8D%8F%E8%AE%AEv3.html
+        data = {
+            "header": {
+                "app_id": self.app_id,
+                # "callback_url": "",
+                # "request_id": ""
+            },
+            "parameter": {
+                "dts": {
+                    "vcn": "x4_mingge",#请先在控制台开通明哥发音人权限
+                    "language": "zh",
+                    "speed": 50,
+                    "volume": 50,
+                    "pitch": 50,
+                    "rhy": 1,
+                    "bgs": 0,
+                    "reg": 0,
+                    "rdn": 0,
+                    "scn": 0,
+                    "audio": {
+                        "encoding": "lame", # 下方下载的文件后缀需要保持一致
+                        "sample_rate": 16000,
+                        "channels": 1,
+                        "bit_depth": 16,
+                        "frame_size": 0
+                    },
+                    "pybuf": {
+                        "encoding": "utf8",
+                        "compress": "raw",
+                        "format": "plain"
+                    }
+                }
+            },
+            "payload": {
+                "text": {
+                    "encoding": "utf8",
+                    "compress": "raw",
+                    "format": "plain",
+                    "text": txt
+                }
+            },
+        }
+        try:
+            print("创建任务请求参数:", json.dumps(data))
+            res = requests.post(url=auth_url, headers=headers, data=json.dumps(data))
+            res = json.loads(res.text)
+            return res
+        except Exception as e:
+            print("创建任务接口调用异常，错误详情:%s" % e)
+            sys.exit(1)
+
+    # 查询任务
+    def test_query(self, task_id):
+        # 查询任务的路由
+        query_path = "/v1/private/dts_query"
+        # 拼接鉴权参数后生成的url
+        auth_url = self.assemble_auth_url(query_path)
+        # 请求头
+        headers = {'Content-Type': 'application/json'}
+        # 请求参数，字段具体含义见官网文档：https://aidocs.xfyun.cn/docs/dts/%E6%8E%A5%E5%8F%A3%E5%8D%8F%E8%AE%AEv3.html
+        data = {
+            "header": {
+                "app_id": self.app_id,
+                "task_id": task_id
+            }
+        }
+        try:
+            print("\n查询任务请求参数:",json.dumps(data))
+            res = requests.post(url=auth_url, headers=headers, data=json.dumps(data))
+            res = json.loads(res.text)
+            return res
+        except Exception as e:
+            print("查询任务接口调用异常，错误详情:%s" % e)
+            sys.exit(1)
+
+
+# 创建任务
+def do_create(text):
+    # 调用创建任务接口
+    test_task = TestTask()
+    create_result = test_task.test_create(text)
+    print("create_response:",json.dumps(create_result))
+    # 创建任务接口返回状态码
+    code = create_result.get('header', {}).get('code')
+    # 状态码为0，创建任务成功，打印task_id, 用于后续查询任务
+    if code == 0:
+        task_id = create_result.get('header', {}).get('task_id')
+        print("创建任务成功，task_id: %s" % task_id)
+        return task_id
+    # 状态码非0，创建任务失败, 相关错误码参考官网文档：https://aidocs.xfyun.cn/docs/dts/%E6%8E%A5%E5%8F%A3%E5%8D%8F%E8%AE%AEv3.html
+    else:
+        print("创建任务失败，返回状态码: %s" % code)
+
+# 查询任务
+def do_query(task_id):
+    test_task = TestTask()
+    # 这里循环调用查询结果，当task_status状态为'5'（即大文本合成任务完成）时停止循环，循环次数和sleep时间可酌情定义
+    for i in range(9):
+        # 等待1秒
+        time.sleep(1)
+        # 调用查询任务接口
+        query_result = test_task.test_query(task_id)
+        print("query_response:",json.dumps(query_result))
+        # 查询任务接口返回状态码
+        code = query_result.get('header', {}).get('code')
+        # 状态码为0，查询任务成功
+        if code == 0:
+            # 任务状态码：1-任务创建成功 2-任务派发失败 4-结果处理中 5-结果处理完成
+            task_status = query_result.get('header', {}).get('task_status')
+            if task_status == '5':
+                audio = query_result.get('payload', {}).get('audio').get('audio')
+                # base64解码audio，打印下载链接
+                decode_audio = base64.b64decode(audio)
+                print("查询任务成功，音频下载链接: %s" % decode_audio.decode())
+                return decode_audio
+                break
+            else:
+                print("第%s次查询，处理未完成，任务状态码:%s" % (i + 1, task_status))
         else:
-            with open('./demo.pcm', 'ab') as f:
-                f.write(audio)
-            pcm_to_wav(audio,wav_file_path='./samples/demo.wav')
+            print("查询任务失败，返回状态码: %s" % code)
+            sys.exit(1)
 
-    except Exception as e:
-        print("receive msg,but parse exception:", e)
-
-
-
-# 收到websocket错误的处理
-def on_error(ws, error):
-    print("### error:", error)
-
-
-# 收到websocket关闭的处理
-def on_close(ws, close_status_code, close_msg):
-    print("### closed ###")
-    print(f"Close status code: {close_status_code}")
-    print(f"Close message: {close_msg}")
-
-
-# 收到websocket连接建立的处理
-def on_open(ws):
-    def run(*args):
-        d = {"common": wsParam.CommonArgs,
-             "business": wsParam.BusinessArgs,
-             "data": wsParam.Data,
-             }
-        d = json.dumps(d)
-        print("------>开始发送文本数据")
-        ws.send(d)
-        if os.path.exists('./demo.pcm'):
-            os.remove('./demo.pcm')
-
-    thread.start_new_thread(run, ())
 
 
 if __name__ == "__main__":
-    # 测试时候在此处正确填写相关信息即可运行
-    wsParam = Ws_Param(APPID='6f7999f7', APISecret='NzA3MmUzYTY2OTIwODIzZWQ2NjQxMWNi',
-                       APIKey='5830af717c0b5d1d8f6a9168582b7fab',
-                       Text="央视网消息：云南地处中国西南，独特的区位优势让云南不仅背靠国内市场，还拥有广阔的南亚东南亚国际市场。近年来，云南持续优化拓展对内连通、对外开放通道，面向南亚东南亚辐射中心作用发挥明显。")
-    websocket.enableTrace(False)
-    wsUrl = wsParam.create_url()
-    ws = websocket.WebSocketApp(wsUrl, on_message=on_message, on_error=on_error, on_close=on_close)
-    ws.on_open = on_open
-    ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
+    # 1、用户参数，相关参数注意修改
+    HOST = "api-dx.xf-yun.com"
+    APP_ID = "6f7999f7"
+    API_KEY = "5830af717c0b5d1d8f6a9168582b7fab"
+    API_SECRET = "NzA3MmUzYTY2OTIwODIzZWQ2NjQxMWNi"
 
+    # 2、执行创建任务
+    # file= open("input.txt",encoding='utf-8')
+    # text = file.read()
+    text = "央视网消息：云南地处中国西南，独特的区位优势让云南不仅背靠国内市场，还拥有广阔的南亚东南亚国际市场。近年来，云南持续优化拓展对内连通、对外开放通道，面向南亚东南亚辐射中心作用发挥明显。"
+    task_id = do_create(text)
+    # file.close()
 
+    # 3、执行查询任务
+    # 创建任务执行成功后，由返回的task_id执行查询任务
+    if task_id:
+        query_result = do_query(task_id)
 
-
+    # 4、下载到本地
+    Download_addres = query_result
+    f = requests.get(Download_addres)
+    # 下载文件，根据需要更改文件后缀
+    filename = "./tts.mp3"
+    with open(filename, "wb") as code:
+        code.write(f.content)
+    if filename:
+        print("\n音频保存成功！")
