@@ -52,7 +52,7 @@ class Collection(db.Model):
 class Audio(db.Model):
     __tablename__ ='audio'
     audio_id = db.Column(db.Integer, primary_key=True)
-    news_id = db.Column(db.Integer, primary_key=True)
+    news_id = db.Column(db.Integer, db.ForeignKey(News.news_id))
     audio_title = db.Column(db.LargeBinary)
     audio_content = db.Colunm(db.LargeBinary)
 
@@ -79,5 +79,4 @@ class Audio(db.Model):
 #                 db.session.add(news)
 #         db.session.commit()
 #         print(app.root_path)
-
 #         # 创建对象 插入数据
