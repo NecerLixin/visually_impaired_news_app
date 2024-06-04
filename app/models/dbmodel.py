@@ -49,7 +49,12 @@ class Collection(db.Model):
     news_id = db.Column(db.Integer, db.ForeignKey(News.news_id))
     collection_time = db.Column(db.DateTime)
 
-
+class Audio(db.Model):
+    __tablename__ ='audio'
+    audio_id = db.Column(db.Integer, primary_key=True)
+    news_id = db.Column(db.Integer, primary_key=True)
+    audio_title = db.Column(db.LargeBinary)
+    audio_content = db.Colunm(db.LargeBinary)
 
 # if __name__ == "__main__":
 #     with app.app_context():
