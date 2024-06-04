@@ -54,7 +54,7 @@ class Audio(db.Model):
     audio_id = db.Column(db.Integer, primary_key=True)
     news_id = db.Column(db.Integer, db.ForeignKey(News.news_id))
     audio_title = db.Column(db.LargeBinary)
-    audio_content = db.Colunm(db.LargeBinary)
+    audio_content = db.Column(db.LargeBinary)
 
 # if __name__ == "__main__":
 #     with app.app_context():
