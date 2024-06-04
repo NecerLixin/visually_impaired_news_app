@@ -49,4 +49,41 @@ def create_blueprint_ttsf():
             return jsonify(msg="文字转语音成功"), StatusCode.CODE_FINISTH
         else:
             return jsonify(msg="失败"), StatusCode.CODE_CANT_FINISHT
+        
+        
+    
+    
+    @bp.route('/title2mp3all',methods=['GET'])
+    def title2mp3():
+        def get_tts_title(news_id,title):
+            file_name = f'{news_id}.mp3'
+            file_path = os.path.join(AUDIO_FOLDER, file_name)
+            file_path = os.path.join(project_path,file_path)
+            if os.path.exists(file_path):
+                print('音频文件已存在')
+                return jsonify(msg="音频文件已经存在成功"), StatusCode.CODE_FINISTH
+            task_id = do_create(title)
+            if task_id:
+                query_result = do_query(task_id)
+                # 4、下载到本地
+                Download_addres = query_result
+                if Download_addres == None:
+                    print("下载地址为空")
+                    return None
+                f = requests.get(Download_addres)
+                return f
+            
+        news_all = News.query.all()
+        for news in news_all:
+            news_id = news.news_id
+            news_title = news.news_title
+            title_mp3 = get_tts_title(news_id,news_title)
+            if title_mp3 is not None:
+                audio = Audio(
+                    news_id = news_id,
+                    audio_title = title_mp3
+                )
+                db.session.add(audio)
+                db.session.commit()
+
     return bp
