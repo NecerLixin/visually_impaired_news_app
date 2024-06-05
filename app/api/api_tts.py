@@ -15,7 +15,7 @@ API_SECRET = config_setting['ifly_key']['APISecret']
 AUDIO_FOLDER = 'source'
 
 
-def create_blueprint_ttsf():
+def create_blueprint_tts():
     bp = blueprints.Blueprint('tts',__name__)
     @bp.route('/tts',methods=['GET'])
     def tts():
@@ -93,14 +93,21 @@ def create_blueprint_ttsf():
     @bp.route('/audio/title',methods=['GET'])
     def audio_title():
         news_id = request.args.get('id')
-        title_mp3 = Audio.query.filter_by(news_id=news_id).first()
+        audio = Audio.query.filter_by(news_id=news_id).first()
+        title_mp3 = audio.audio_title
         if title_mp3 is None:
-            return jsonify(msg="错误"),StatusCode.CODE_CANT_FINISHT
-        title_mp3 = title_mp3.audio_title
+            news = News.query.get(news_id)
+            news_title = news.news_title
+            f = get_tts(news_title)
+            title_mp3 = f.content
+            audio.audio_title = f.content
+            db.session.commit()
+            # return jsonify(msg="错误"),StatusCode.CODE_CANT_FINISHT
         resp = send_file(io.BytesIO(title_mp3),
                         mimetype='audio/mp3'
                         )
         return resp
+    
     
     @bp.route('/audio/content',methods=['GET'])
     def audio_content():

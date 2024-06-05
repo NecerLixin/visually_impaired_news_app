@@ -55,7 +55,7 @@ def create_app():
     app.register_blueprint(api_users.create_blueprint_users())
     app.register_blueprint(audio.websocket_bp)
     app.register_blueprint(api_serach.create_blueprint_search())
-    app.register_blueprint(api_tts.create_blueprint_ttsf())
+    app.register_blueprint(api_tts.create_blueprint_tts())
     socketio.init_app(app,cros_allow_origin='*')
     init_routes(app)
     

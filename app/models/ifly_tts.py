@@ -14,6 +14,7 @@ from time import mktime
 import sys
 import json
 
+
 config_setting = json.load(open('app/config_setting.json'))
 project_path = config_setting['project_path']
 HOST = "api-dx.xf-yun.com"
