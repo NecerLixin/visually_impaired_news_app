@@ -1,3 +1,6 @@
+from app.models.ifly_tts import TestTask,do_create,do_query
+import requests
+
 class StatusCode:
     CODE_FINISTH = 200
     CODE_SYTAX_ERROR = 400
@@ -40,3 +43,14 @@ def get_brief(content:list,length=60)->str:
     else:
         return text + "……"
 
+def get_tts(text):
+    task_id = do_create(text)
+    if task_id:
+        query_result = do_query(task_id)
+        # 4、下载到本地
+        Download_addres = query_result
+        if Download_addres == None:
+            print("下载地址为空")
+            return None
+        f = requests.get(Download_addres)
+        return f

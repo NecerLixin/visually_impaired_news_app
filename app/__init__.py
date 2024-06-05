@@ -44,7 +44,7 @@ def create_app():
     
     with app.app_context():
         db.create_all()
-            
+    
     from app.models import dbmodel
     from app.api import api_scrapy,api_users,api_news,api_serach,api_tts
     from app.routes import init_routes
