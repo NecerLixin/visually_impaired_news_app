@@ -1,9 +1,10 @@
-from flask import blueprints,request,jsonify,make_response
-from .utils import get_content,StatusCode
+from flask import blueprints,request,jsonify,make_response,send_file
+from .utils import get_content,StatusCode,get_tts
 from app.models.dbmodel import *
 from app.models.ifly_tts import TestTask,do_create,do_query
 import json
 import requests
+import io
 
 config_setting = json.load(open('app/config_setting.json'))
 project_path = config_setting['project_path']
@@ -49,8 +50,6 @@ def create_blueprint_ttsf():
             return jsonify(msg="文字转语音成功"), StatusCode.CODE_FINISTH
         else:
             return jsonify(msg="失败"), StatusCode.CODE_CANT_FINISHT
-        
-        
     
     
     @bp.route('/title2mp3all',methods=['GET'])
@@ -59,9 +58,9 @@ def create_blueprint_ttsf():
             file_name = f'{news_id}.mp3'
             file_path = os.path.join(AUDIO_FOLDER, file_name)
             file_path = os.path.join(project_path,file_path)
-            if os.path.exists(file_path):
-                print('音频文件已存在')
-                return jsonify(msg="音频文件已经存在成功"), StatusCode.CODE_FINISTH
+            # if os.path.exists(file_path):
+            #     print('音频文件已存在')
+            #     return jsonify(msg="音频文件已经存在成功"), StatusCode.CODE_FINISTH
             task_id = do_create(title)
             if task_id:
                 query_result = do_query(task_id)
@@ -71,11 +70,14 @@ def create_blueprint_ttsf():
                     print("下载地址为空")
                     return None
                 f = requests.get(Download_addres)
-                return f
+                return f.content
             
         news_all = News.query.all()
         for news in news_all:
             news_id = news.news_id
+            audio_check = Audio.query.filter_by(news_id=news_id).count()
+            if audio_check > 0:
+                continue
             news_title = news.news_title
             title_mp3 = get_tts_title(news_id,news_title)
             if title_mp3 is not None:
@@ -85,5 +87,41 @@ def create_blueprint_ttsf():
                 )
                 db.session.add(audio)
                 db.session.commit()
-
+        return jsonify(msg="完成"), 200
+    
+    
+    @bp.route('/audio/title',methods=['GET'])
+    def audio_title():
+        news_id = request.args.get('id')
+        title_mp3 = Audio.query.filter_by(news_id=news_id).first()
+        if title_mp3 is None:
+            return jsonify(msg="错误"),StatusCode.CODE_CANT_FINISHT
+        title_mp3 = title_mp3.audio_title
+        resp = send_file(io.BytesIO(title_mp3),
+                        mimetype='audio/mp3'
+                        )
+        return resp
+    
+    @bp.route('/audio/content',methods=['GET'])
+    def audio_content():
+        news_id = request.args.get('id')
+        audio = Audio.query.filter_by(news_id=news_id).first()
+        content_mp3 = audio.audio_content
+        if content_mp3 is None:
+            news = News.query.get(news_id)
+            news_content = json.loads(news.news_content)
+            news_title = news.news_title
+            text = get_content(news_content,news_title)
+            f = get_tts(text)
+            content_mp3 = f.content
+            audio.audio_content = content_mp3
+            db.session.commit()
+        resp = send_file(io.BytesIO(content_mp3),
+                         mimetype='audio/mp3')
+        return resp
+        
+        
+    
+    
+    
     return bp
