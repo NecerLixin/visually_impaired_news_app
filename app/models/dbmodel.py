@@ -56,6 +56,13 @@ class Audio(db.Model):
     audio_title = db.Column(db.LargeBinary)
     audio_content = db.Column(db.LargeBinary)
 
+class Verification(db.Model):
+    __tablename__ = 'verification'
+    verify_id = db.Column(db.Integer, primary_key=True)
+    verify_code = db.Column(db.String(32))
+    user_account = db.Column(db.String(32))
+    time = db.Column(db.DateTime)
+
 # if __name__ == "__main__":
 #     with app.app_context():
 #         # 清除所有表

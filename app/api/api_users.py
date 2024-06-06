@@ -3,16 +3,68 @@ from app.crawlers.scrapy3 import news_storage
 from app.models.dbmodel import *
 import datetime
 from .utils import StatusCode,get_brief
-
-
-def create_blueprint_users():
+from flask_mail import Message
+import random
+from app import config_settings
+def create_blueprint_users(mail):
     bp = Blueprint('users',__name__)
+    @bp.route('/users/register2',methods=['POST'])
+    def register2():
+        data = request.get_json()
+        account = data.get('account')
+        password = data.get('password')
+        verification_code = data.get('verification_code')
+        now_time = datetime.datetime.now()
+        verify = Verification.query.filter_by(user_account=account).order_by(Verification.time.desc()).first()
+        date = datetime.date.today()
+        resp = make_response()
+        resp.headers['Content-Type'] = 'application/json; charset=UTF-8'
+        if account and password is not None:
+            # 检查是否存在用户
+            user_check = User.query.filter_by(user_account=account).count()
+            if user_check > 0:
+                print("用户已存在")
+                resp.set_data(jsonify(msg="账号已存在",code=1).get_data())
+                resp.status_code = StatusCode.CODE_CANT_FINISH
+                # 服务器理解客户端请求，但是拒绝执行此次请求
+                return resp
+            else:
+                if verify.verify_code == verification_code:
+                    user = User(user_account=account,
+                                user_password=password,
+                                create_time=date
+                                )
+                    db.session.add(user)
+                    db.session.commit()
+                    print("注册成功")
+                    resp.set_data(jsonify(msg="注册成功",code=0).get_data())
+                    resp.status_code = StatusCode.CODE_FINISH
+                else:
+                    resp.set_data(jsonify(msg="验证码错误",code=3).get_data())
+                    resp.status_code = StatusCode.CODE_CANT_FINISH
+                # 请求成功
+                return resp
+        else:
+            resp.set_data(jsonify(msg="格式错误",code=2).get_data())
+            resp.status_code = StatusCode.CODE_SYNTAX_ERROR
+            # 400 表示请求语法错误，服务器无法理解
+            return resp
+    
+    
+    @bp.route('/user/reset-password',methods=['PUT'])
+    def reset_password():
+        data = request.get_json()
+        
+    
+    
+    
     @bp.route('/users/register',methods=['POST'])
     def register():
         data = request.get_json()
         account = data.get('account')
         password = data.get('password')
-
+        # verification_code = data.get('verification_code')
+        # now_time = datetime.datetime.now()
         date = datetime.date.today()
         resp = make_response()
         resp.headers['Content-Type'] = 'application/json; charset=UTF-8'
@@ -146,4 +198,30 @@ def create_blueprint_users():
         resp.headers['Content-Type'] = "application/json; charset=utf-8"
         return resp
     
+    @bp.route('/user/send-verification',methods=['GET'])
+    def send_verification():
+        def send_email(to, subject, body):
+            msg = Message(
+                subject,
+                recipients=[to],
+                body=body,
+                sender=config_settings['mail_account']
+            )
+            mail.send(msg)
+        account = request.args.get('account')
+        verification_code = str(random.randint(100000, 999999))
+        time = datetime.datetime.now()
+        verify = Verification(
+            verify_code=verification_code,
+            user_account=account,
+            time=time
+        )
+        db.session.add(verify)
+        db.session.commit()
+        subject = "Your Verification Code"
+        send_email(account, subject, f'Your verification code is {verification_code}')
+        return jsonify(msg=f'验证码发送成功，验证码：{verification_code}',code=0),200
+    
+    
+
     return bp
