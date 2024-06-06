@@ -30,7 +30,7 @@ def create_blueprint_tts():
         file_path = os.path.join(project_path,file_path)
         if os.path.exists(file_path):
             print('音频文件已存在')
-            return jsonify(msg="音频文件已经存在成功"), StatusCode.CODE_FINISTH
+            return jsonify(msg="音频文件已经存在成功"), StatusCode.CODE_FINISH
         task_id = do_create(content_text)
         if task_id:
             query_result = do_query(task_id)
@@ -38,7 +38,7 @@ def create_blueprint_tts():
             Download_addres = query_result
             if Download_addres == None:
                 print("下载地址为空")
-                return jsonify(msg="失败"), StatusCode.CODE_CANT_FINISHT
+                return jsonify(msg="失败"), StatusCode.CODE_CANT_FINISH
             f = requests.get(Download_addres)
             # 下载文件，根据需要更改文件后缀
             
@@ -47,9 +47,9 @@ def create_blueprint_tts():
                 code.write(f.content)
             if file_path:
                 print("\n音频保存成功！")
-            return jsonify(msg="文字转语音成功"), StatusCode.CODE_FINISTH
+            return jsonify(msg="文字转语音成功"), StatusCode.CODE_FINISH
         else:
-            return jsonify(msg="失败"), StatusCode.CODE_CANT_FINISHT
+            return jsonify(msg="失败"), StatusCode.CODE_CANT_FINISH
     
     
     @bp.route('/title2mp3all',methods=['GET'])

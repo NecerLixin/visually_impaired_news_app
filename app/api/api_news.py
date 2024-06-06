@@ -44,11 +44,11 @@ def create_blueprint_news():
             msg = "新闻内容请求成功"
             content = news.news_content
             resp.set_data(str({"msg":msg,"content":content}))
-            resp.status_code = StatusCode.CODE_FINISTH
+            resp.status_code = StatusCode.CODE_FINISH
         else:
             msg = "请求失败，新闻id错误"
             resp.set_data(str({"msg":msg}))
-            resp.status_code = StatusCode.CODE_CANT_FINISHT
+            resp.status_code = StatusCode.CODE_CANT_FINISH
         resp.headers['Content-Type'] = 'application/json; charset=UTF-8'
         return resp
     

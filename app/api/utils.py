@@ -2,10 +2,10 @@ from app.models.ifly_tts import TestTask,do_create,do_query
 import requests
 
 class StatusCode:
-    CODE_FINISTH = 200
-    CODE_SYTAX_ERROR = 400
+    CODE_FINISH = 200
+    CODE_SYNTAX_ERROR = 400
     CODE_UNDERSTAND_REFUSE = 403
-    CODE_CANT_FINISHT = 406
+    CODE_CANT_FINISH = 406
 
 
 def get_content(content:list,title:str)->str:

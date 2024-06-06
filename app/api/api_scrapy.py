@@ -16,9 +16,9 @@ def create_blueprint_crawl(browser=None,loop=None):
             date = datetime.date.today() - datetime.timedelta(days=day_del)
             news_storage(browser,loop,date=date)
             resp.set_data(jsonify(msg='爬虫完成').get_data())
-            resp.status_code = StatusCode.CODE_FINISTH
+            resp.status_code = StatusCode.CODE_FINISH
         else:
             resp.set_data(jsonify(msg='请求格式错误').get_data())
-            resp.status_code = StatusCode.CODE_SYTAX_ERROR
+            resp.status_code = StatusCode.CODE_SYNTAX_ERROR
         return resp
     return bp

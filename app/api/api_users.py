@@ -12,7 +12,7 @@ def create_blueprint_users():
         data = request.get_json()
         account = data.get('account')
         password = data.get('password')
-        # verify = request.form.get('vertify')
+
         date = datetime.date.today()
         resp = make_response()
         resp.headers['Content-Type'] = 'application/json; charset=UTF-8'
@@ -22,7 +22,7 @@ def create_blueprint_users():
             if user_check > 0:
                 print("用户已存在")
                 resp.set_data(jsonify(msg="账号已存在").get_data())
-                resp.status_code = StatusCode.CODE_CANT_FINISHT
+                resp.status_code = StatusCode.CODE_CANT_FINISH
                 # 服务器理解客户端请求，但是拒绝执行此次请求
                 return resp
             else:
@@ -34,12 +34,12 @@ def create_blueprint_users():
                 db.session.commit()
                 print("注册成功")
                 resp.set_data(jsonify(msg="注册成功").get_data())
-                resp.status_code = StatusCode.CODE_FINISTH
+                resp.status_code = StatusCode.CODE_FINISH
                 # 请求成功
                 return resp
         else:
             resp.set_data(jsonify(msg="格式错误").get_data())
-            resp.status_code = StatusCode.CODE_SYTAX_ERROR
+            resp.status_code = StatusCode.CODE_SYNTAX_ERROR
             # 400 表示请求语法错误，服务器无法理解
             return resp
     
@@ -68,7 +68,7 @@ def create_blueprint_users():
                 user_password = user.user_password
                 if password == user_password:
                     resp.set_data(jsonify(msg='登陆成功').get_data())
-                    resp.status_code = StatusCode.CODE_FINISTH
+                    resp.status_code = StatusCode.CODE_FINISH
                 else:
                     resp.set_data(jsonify(mgs="密码错误").get_data())
                     resp.status_code = StatusCode.CODE_UNDERSTAND_REFUSE
@@ -76,7 +76,7 @@ def create_blueprint_users():
 
             else :
                 resp = make_response(jsonify(msg="用户不存在").get_data())
-                resp.status_code = StatusCode.CODE_CANT_FINISHT
+                resp.status_code = StatusCode.CODE_CANT_FINISH
                 # 服务器无法根据客户端请求的内容特性完成请求
             resp.headers['Content-Type'] = 'application/json; charset=gzip'
         else:
@@ -101,13 +101,13 @@ def create_blueprint_users():
                 db.session.add(history)
                 db.session.commit()
                 resp.set_data(jsonify(msg="历史记录创建成功").get_data())
-                resp.status_code = StatusCode.CODE_FINISTH
+                resp.status_code = StatusCode.CODE_FINISH
             else:
                 resp.set_data(jsonify(msg="用户不存在").get_data())
-                resp.status_code = StatusCode.CODE_FINISTH
+                resp.status_code = StatusCode.CODE_FINISH
         else:
             resp.set_data(jsonify(msg="请求格式错误").get_data())
-            resp.status_code = StatusCode.CODE_SYTAX_ERROR
+            resp.status_code = StatusCode.CODE_SYNTAX_ERROR
         resp.headers['Content-Type'] = "application/json; charset=UTF-8"
         return resp
         
@@ -138,7 +138,7 @@ def create_blueprint_users():
                           }
                 history_data.append(sample)
             resp.set_data(jsonify(history_data).get_data())
-            resp.status_code = StatusCode.CODE_FINISTH
+            resp.status_code = StatusCode.CODE_FINISH
         else:
             resp.set_data(jsonify(msg="无历史记录").get_data())
             resp.status_code = StatusCode.CODE_UNDERSTAND_REFUSE
