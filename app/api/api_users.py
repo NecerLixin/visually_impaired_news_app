@@ -61,8 +61,9 @@ def create_blueprint_users():
         password = data.get('password')
         resp = make_response()
         
+       
         
-        if account and password is not None:
+        if account is not None and password is not None:
             user = User.query.filter_by(user_account=account).first()
             if user:
                 user_password = user.user_password
