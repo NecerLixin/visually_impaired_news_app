@@ -54,3 +54,18 @@ def get_tts(text):
             return None
         f = requests.get(Download_addres)
         return f
+
+
+class RespContent:
+    def __init__(self,msg=None,code=None,data=None) -> None:
+        self.msg = msg
+        self.code = code
+        self.data = data
+        
+    def to_dict(self):
+        return {
+            "msg":self.msg,
+            "code":self.code,
+            "data":self.data
+        }
+        

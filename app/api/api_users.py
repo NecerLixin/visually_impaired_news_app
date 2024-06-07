@@ -2,10 +2,11 @@ from flask import Blueprint, jsonify, make_response, request
 from app.crawlers.scrapy3 import news_storage
 from app.models.dbmodel import *
 import datetime
-from .utils import StatusCode,get_brief
+from .utils import StatusCode,get_brief,RespContent
 from flask_mail import Message
 import random
 from app import config_settings
+
 def create_blueprint_users(mail):
     bp = Blueprint('users',__name__)
     @bp.route('/users/register2',methods=['POST'])
